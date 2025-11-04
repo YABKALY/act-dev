@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ACT DEV API – Swagger UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+
+    :root{
+      --bg: #0c111b;        
+      --panel: #121a2a;     
+      --panel-2: #0f1626;    
+      --text: #e6edf3;       
+      --muted: #9fb0c3;      
+      --border: #263244;     
+      --accent: #3a8787;     
+      --accent-2: #46a6a6;   
+      --danger: #f07178;
+      --success: #9fe870;
+      --warning: #ffd166;
+      --code-bg: #0b1323;
+      --tag: #1a2237;
+      --shadow: 0 6px 20px rgba(0,0,0,.25);
+      --radius: 14px;
+    }
+
+    /* Page base */
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      font-synthesis-weight: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Topbar */
+    .topbar{
+      background: var(--bg) !important;
+      border-bottom: 1px solid var(--border);
+      box-shadow: none !important;
+      padding: 8px 0;
+    }
+    .topbar-wrapper .link{
+      border: 1px solid var(--border) !important;
+      background: var(--panel) !important;
+      border-radius: 10px;
+      padding: 6px 10px !important;
+    }
+    .topbar-wrapper .link span{ color: var(--text) !important; }
+    .download-url-wrapper .download-url-input{
+      background: var(--panel) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+    }
+    .download-url-wrapper .download-url-button{
+      background: var(--accent) !important;
+      border: none !important;
+      color: #fff !important;
+    }
+
+    /* Global containers */
+    .swagger-ui .wrapper{
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 16px 40px;
+    }
+    .swagger-ui .scheme-container{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .servers-title, .opblock-tag, .opblock-tag small,
+    .swagger-ui .info .title, .swagger-ui .info .base-url, .markdown p{
+      color: var(--text) !important;
+    }
+    .info .title{ letter-spacing:.3px; }
+
+    /* Tags (group headers) */
+    .opblock-tag{
+      background: var(--tag);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin: 16px 0;
+    }
+    .opblock-tag:hover{
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+      cursor: pointer;
+    }
+
+    /* Opblocks (endpoints) */
+    .opblock{
+      background: var(--panel);
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .opblock .opblock-summary{
+      background: linear-gradient(0deg, var(--panel-2), var(--panel-2));
+      border-bottom: 1px solid var(--border);
+    }
+    .opblock .opblock-summary-method{
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+
+    /* Method color chips (harmonized to theme) */
+    .opblock.opblock-post .opblock-summary-method{ background: var(--accent) !important; color:#fff; }
+    .opblock.opblock-get .opblock-summary-method{ background: #5fb1ff !important; color:#001428; }
+    .opblock.opblock-put .opblock-summary-method{ background: #c792ea !important; color:#1b0035; }
+    .opblock.opblock-delete .opblock-summary-method{ background: var(--danger) !important; color:#1c0000; }
+    .opblock.opblock-patch .opblock-summary-method{ background: #f78c6c !important; color:#2b0d00; }
+
+    .opblock .opblock-summary-path, .opblock .opblock-summary-description{
+      color: var(--muted) !important;
+    }
+    .opblock .opblock-body{
+      background: var(--panel);
+    }
+
+    .btn, .authorization__btn, .copy-to-clipboard, .model-toggle{
+      border-radius: 10px !important;
+    }
+    .btn, .authorization__btn{
+      background: var(--accent) !important;
+      color:#fff !important;
+      border: 1px solid transparent !important;
+    }
+    .btn:hover, .authorization__btn:hover{ background: var(--accent-2) !important; }
+    .btn.authorize, .auth-wrapper .authorize{
+      background: transparent !important;
+      border: 1px solid var(--accent) !important;
+      color: var(--accent) !important;
+    }
+    .btn.authorize:hover{
+      background: var(--accent) !important;
+      color:#fff !important;
+    }
+
+    /* idk gen it is working */
+    input, select, textarea{
+      background: var(--panel-2) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 10px !important;
+    }
+    ::placeholder{ color: #7b8aa1 !important; }
+
+    /* Tables & responses */
+    table{
+      background: var(--panel-2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 10px !important;
+      overflow: hidden;
+    }
+    th, td{ border-color: var(--border) !important; }
+    tr:nth-child(odd){ background: #0f172a !important; }
+    tr:nth-child(even){ background: #0e1628 !important; }
+
+    /* Code blocks */
+    code, pre{
+      background: var(--code-bg) !important;
+      color: #d8e1f0 !important;
+      border: 1px solid #0f1a33 !important;
+      border-radius: 10px !important;
+    }
+    .prop-type, .model .property.primitive .prop-type{ color: #9cdcfe !important; }
+    .model .property .prop-format{ color: #c586c0 !important; }
+    .microlight{ background: var(--code-bg) !important; color: #d8e1f0 !important; }
+
+    /* Markdown headings */
+    .markdown h1, .markdown h2, .markdown h3, .markdown h4{
+      color: var(--text) !important;
+    }
+
+    /* Small UI details */
+    .opblock .tab-header{ border-color: var(--border) !important; }
+    .response-col_description__inner p{ color: var(--muted) !important; }
+    .responses-inner h5, .responses-inner h4{ color: var(--text) !important; }
+
+    /* Scrollbar (webkit) */
+    ::-webkit-scrollbar{ height:12px; width:12px; }
+    ::-webkit-scrollbar-track{ background: #0b1222; }
+    ::-webkit-scrollbar-thumb{ background: #243149; border-radius:10px; border:2px solid #0b1222; }
+    ::-webkit-scrollbar-thumb:hover{ background: #2c3c59; }
+
+    /* Make “Try it out” panels pop slightly */
+    .execute-wrapper, .response .headers, .response .curl, .response .response-col_description{
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+
+  <!-- Swagger UI JS (CDN) -->
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+
+  <script>
+    /* === OpenAPI spec (same endpoints, themed UI only) === */
+    const spec = {
+      openapi: "3.0.3",
+      info: {
+        
+        title: "ACT DEV API",
+        version: "1.0.0",
+        description:
+`Secure API where **all endpoints require JWT** except login routes.
+
+**Auth rules**
+- Admin token (from \`/admin/login\`): \`isAdmin: true\`, expires in **1h**
+- Organizer token (from \`/organizer/login\`): expires in **8h**
+- Global security applies to every endpoint **except** \`/admin/login\` and \`/organizer/login\`
+- Login endpoints rate-limited (20 req / 15 min / IP)`
+      },
+      servers: [
+        { url: "http://localhost:3000/api", description: "Local (HTTPS)" },
+      ],
+      tags: [
+        { name: "Auth", description: "Login to obtain JWT" },
+        { name: "Admin", description: "Admin-only or admin/organizer endpoints" },
+        { name: "Organizer", description: "Organizer operations" }
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "Add `Bearer <token>`" }
+        },
+        schemas: {
+          LoginRequest: { type: "object", required: ["username", "password"], properties: {
+            username: { type: "string", example: "admin1" },
+            password: { type: "string", example: "secret" }
+          }},
+          TokenResponse: { type: "object", properties: {
+            accessToken: { type: "string", example: "eyJhbGciOi..." }
+          }},
+          MessageResponse: { type: "object", properties: { message: { type: "string" } }},
+          CreateEventRequest: { type: "object", required: ["eventName", "eventDate"], properties: {
+            eventName: { type: "string", example: "Tech Meetup" },
+            eventDate: { type: "string", example: "2025-11-01" }
+          }},
+          Event: { type: "object", properties: {
+            id: { type: "integer", example: 42 },
+            name: { type: "string", example: "Tech Meetup" },
+            date: { type: "string", example: "2025-11-01" },
+            isActive: { type: "boolean", example: true }
+          }},
+          Reservation: { type: "object", properties: {
+            id: { type: "integer", example: 1 },
+            studentId: { type: "integer", example: 123 },
+            createdAt: { type: "string", example: "2025-10-01T09:00:00Z" }
+          }},
+          OrganizerCreateRequest: { type: "object", required: ["username", "password"], properties: {
+            username: { type: "string", example: "org2" },
+            password: { type: "string", example: "secret" }
+          }},
+          Attendee: { type: "object", properties: {
+            studentId: { type: "integer", example: 123 },
+            full_name: { type: "string", example: "Jane Doe" },
+            checkedInAt: { type: "string", example: "2025-10-25T12:34:56Z" }
+          }},
+          DashboardStats: { type: "object", properties: {
+            todaysRegistrations: { type: "integer", example: 12 },
+            upcomingEventReservations: { type: "integer", example: 45 },
+            totalRegisteredUsers: { type: "integer", example: 380 },
+            allUsers: { type: "array", items: { type: "object" } }
+          }},
+          AttendanceMarkRequest: { type: "object", required: ["studentId"], properties: {
+            studentId: { type: "integer", example: 123 }
+          }},
+          UnauthorizedError: { type: "object", example: { message: "Unauthorized: Bearer token required in Authorization header." }},
+          ForbiddenError: { type: "object", example: { message: "Forbidden: Invalid or expired token." }},
+          AdminOnlyError: { type: "object", example: { message: "Forbidden: Admin privileges required." }},
+          TooManyRequestsError: { type: "object", example: { message: "Too many login attempts. Please try again later." }}
+        },
+        responses: {
+          Unauthorized: { description: "Missing/invalid token",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/UnauthorizedError" } } } },
+          Forbidden: { description: "Invalid/expired token",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ForbiddenError" } } } },
+          AdminOnly: { description: "Requires admin rights",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/AdminOnlyError" } } } },
+          TooManyRequests: { description: "Rate limit",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/TooManyRequestsError" } } } }
+        }
+      },
+      security: [{ bearerAuth: [] }],
+      paths: {
+        "/admin/login": {
+          post: {
+            tags: ["Auth"],
+            summary: "Admin login",
+            description: "Returns a JWT with `isAdmin: true` (expires in 1h). Rate-limited.",
+            security: [],
+            requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LoginRequest" } } } },
+            responses: {
+              "200": { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/TokenResponse" } } } },
+              "400": { description: "Missing fields", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "429": { $ref: "#/components/responses/TooManyRequests" },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/organizer/login": {
+          post: {
+            tags: ["Auth"],
+            summary: "Organizer login",
+            description: "Returns an organizer JWT (expires in 8h). Rate-limited.",
+            security: [],
+            requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LoginRequest" } } } },
+            responses: {
+              "200": { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/TokenResponse" } } } },
+              "400": { description: "Missing fields", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "429": { $ref: "#/components/responses/TooManyRequests" },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/admin/events": {
+          post: {
+            tags: ["Admin"],
+            summary: "Create event",
+            description: "Creates a new event (deactivates prior active one). Admin or Organizer.",
+            requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/CreateEventRequest" } } } },
+            responses: {
+              "201": { description: "Created", content: { "application/json": { schema: {
+                type: "object", properties: {
+                  message: { type: "string", example: "Event created successfully." },
+                  event: { $ref: "#/components/schemas/Event" }
+                }}}}},
+              "400": { description: "Missing fields", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "403": { $ref: "#/components/responses/Forbidden" },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/admin/reservations": {
+          get: {
+            tags: ["Admin"],
+            summary: "List reservations (active event)",
+            description: "Returns all reservations for the currently active event. Admin or Organizer.",
+            responses: {
+              "200": { description: "OK", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Reservation" } } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "403": { $ref: "#/components/responses/Forbidden" },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/admin/create-organizer": {
+          post: {
+            tags: ["Admin"],
+            summary: "Create organizer (Admin only)",
+            description: "Creates a new organizer account. Requires admin token.",
+            requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/OrganizerCreateRequest" } } } },
+            responses: {
+              "201": { description: "Created", content: { "application/json": { schema: {
+                type: "object", properties: {
+                  message: { type: "string", example: "Organizer created successfully" },
+                  organizer: { type: "object", additionalProperties: true }
+                }}}}},
+              "400": { description: "Missing fields", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "403": { $ref: "#/components/responses/AdminOnly" },
+              "409": { description: "Username exists", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/admin/events/{id}/attendees": {
+          get: {
+            tags: ["Admin"],
+            summary: "List attendees for event (Admin only)",
+            description: "Returns attendees for a specific (past) event.",
+            parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" }, example: 42 }],
+            responses: {
+              "200": { description: "OK", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Attendee" } } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "403": { $ref: "#/components/responses/AdminOnly" },
+              "404": { description: "Event not found / no attendees", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/admin/dashboard-stats": {
+          get: {
+            tags: ["Admin"],
+            summary: "Dashboard stats (Admin only)",
+            description: "Aggregated metrics and user list for the admin dashboard.",
+            responses: {
+              "200": { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/DashboardStats" } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "403": { $ref: "#/components/responses/AdminOnly" },
+              "500": { description: "Server error" }
+            }
+          }
+        },
+        "/organizer/mark-attendance": {
+          post: {
+            tags: ["Organizer"],
+            summary: "Mark attendance (active event)",
+            description: "Marks a student's attendance for the currently active event. Admin or Organizer.",
+            requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/AttendanceMarkRequest" } } } },
+            responses: {
+              "200": { description: "OK", content: { "application/json": { schema: {
+                type: "object", properties: {
+                  success: { type: "boolean", example: true },
+                  message: { type: "string", example: "Attendance marked for John Doe." }
+                }}}}},
+              "400": { description: "Missing studentId", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "401": { $ref: "#/components/responses/Unauthorized" },
+              "403": { $ref: "#/components/responses/Forbidden" },
+              "404": { description: "No active event", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "409": { description: "Already marked / invalid", content: { "application/json": { schema: { $ref: "#/components/schemas/MessageResponse" } } } },
+              "500": { description: "Server error" }
+            }
+          }
+        }
+      }
+    };
+
+    /* Initialize UI */
+    window.ui = SwaggerUIBundle({
+      spec,
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+      layout: "BaseLayout",
+      docExpansion: "none",
+      tryItOutEnabled: true,
+      persistAuthorization: true
+    });
+  </script>
+</body>
+</html>
