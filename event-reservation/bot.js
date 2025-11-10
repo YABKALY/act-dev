@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token, { polling: false });
 
 // State management for all conversation flows
 const userStates = {}; 
@@ -20,7 +20,7 @@ const BC_STEPS = { IMAGE: 'WAITING_FOR_IMAGE_NAME', CAPTION: 'WAITING_FOR_CAPTIO
 // Load authorized broadcaster IDs from the .env file and split them into an array
 const authorizedBroadcasters = (process.env.AUTHORIZED_BROADCAST_IDS || '').split(',');
 
-const startBot = () => {
+const startBot = async () => {
     // --- COMMAND HANDLER: /start (No Changes) ---
     bot.onText(/\/start/, async (msg) => {
         const chatId = msg.chat.id;
@@ -214,6 +214,16 @@ const startBot = () => {
             }
         }
     });
+    // Clear any pending updates (backlog) before starting polling
+    try {
+    await bot.deleteWebHook({ drop_pending_updates: true }); // node-telegram-bot-api uses deleteWebHook
+    } catch (e) {
+    // Fallback for environments that expose deleteWebhook (lowercase 'h')
+    try { await bot.deleteWebhook({ drop_pending_updates: true }); } catch (_) {}
+    }
+
+    // Now start polling fresh (no old messages)
+    await bot.startPolling({ params: { timeout: 50 } });
 
     console.log('Bot is running and polling for updates...');
 };
