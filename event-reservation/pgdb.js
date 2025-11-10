@@ -235,7 +235,20 @@ const countActiveEventReservations = async () => {
     return parseInt(res.rows[0].count);
 };
 
-// --- NEW FUNCTION for the Broadcast Feature ---
+const getActiveEventAttendees = async () => {
+    const query = `
+        SELECT s.full_name, s.year_of_study
+        FROM reservations r
+        JOIN students s ON r.student_id = s.id
+        WHERE r.event_id = (SELECT id FROM events WHERE is_active = TRUE LIMIT 1) 
+          AND r.attended = TRUE;
+    `;
+    const res = await pool.query(query);
+    return res.rows;
+};
+
+// --- TELEGRAM-SPECIFIC FUNCTIONS ---
+
 const getAllStudentTelegramIds = async () => {
     try {
         const res = await pool.query("SELECT telegram_id FROM students");
@@ -245,7 +258,6 @@ const getAllStudentTelegramIds = async () => {
         return []; // Return an empty array on error to prevent the bot from crashing
     }
 };
-
 
 module.exports = { 
     initDB,
@@ -265,6 +277,6 @@ module.exports = {
     markAttendance,
     getAttendeesByEventId,
     countActiveEventReservations,
-    // --- NEW EXPORT to make the function available to bot.js ---
-    getAllStudentTelegramIds
+    getAllStudentTelegramIds,
+    getActiveEventAttendees
 };

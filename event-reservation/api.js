@@ -280,4 +280,37 @@ router.post('/organizer/mark-attendance', async (req, res) => {
   }
 });
 
+
+/**
+ * @route   GET /organizer/random-winners
+ * @desc    Selects up to 5 random winners from the active event's attendees.
+ * @access  Protected (Organizer or Admin)
+ */
+router.get('/organizer/random-winners', async (req, res) => {
+    try {
+        const attendees = await db.getActiveEventAttendees();
+
+        // Case 1: No one has been marked as attended yet.
+        if (!attendees || attendees.length === 0) {
+            return res.status(404).json({ message: 'No attended people for now.' });
+        }
+
+        // Case 2: There are attendees. Shuffle the array to randomize.
+        // (Fisher-Yates shuffle algorithm)
+        for (let i = attendees.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [attendees[i], attendees[j]] = [attendees[j], attendees[i]];
+        }
+
+        // Take the first 5 people. If there are fewer than 5, it will just take all of them.
+        const winners = attendees.slice(0, 5);
+
+        // Respond with the list of winners.
+        res.json({ winners });
+
+    } catch (error) {
+        console.error('Error selecting random winners:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 module.exports = router;
