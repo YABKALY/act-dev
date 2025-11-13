@@ -410,6 +410,7 @@
             }
           }
         },
+        
         "/organizer/mark-attendance": {
           post: {
             tags: ["Organizer"],
@@ -431,6 +432,56 @@
             }
           }
         }
+        ,"/organizer/random-winners": {
+  "get": {
+    "tags": ["Organizer"],
+    "summary": "Select up to 5 random winners (active event)",
+    "description": "Returns up to 5 randomly selected attendees from the currently active event. Protected (Organizer/Admin).",
+    "responses": {
+      "200": {
+        "description": "OK",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "winners": {
+                  "type": "array",
+                  "maxItems": 5,
+                  "items": { "$ref": "#/components/schemas/Attendee" }
+                }
+              }
+            },
+            "examples": {
+              "sample": {
+                "summary": "Example winners",
+                "value": {
+                  "winners": [
+                    { "studentId": 101, "full_name": "Jane Doe", "checkedInAt": "2025-10-25T12:34:56Z" },
+                    { "studentId": 202, "full_name": "John Smith", "checkedInAt": "2025-10-25T12:40:00Z" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "No attended people for now.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/MessageResponse" },
+            "examples": { "none": { "value": { "message": "No attended people for now." } } }
+          }
+        }
+      },
+      "401": { "$ref": "#/components/responses/Unauthorized" },
+      "403": { "$ref": "#/components/responses/Forbidden" },
+      "500": { "description": "Server error" }
+    }
+  }
+}
+
       }
     };
 

@@ -313,4 +313,69 @@ router.get('/organizer/random-winners', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+// --- NEW: TEMPORARY ENDPOINTS FOR GENERAL (NON-RESERVED) ATTENDANCE ---
+
+/**
+ * @route   POST /organizer/record-general-attendance
+ * @desc    (Temporary) Records attendance for ANY registered student for the active event.
+ * @access  Protected (Organizer or Admin)
+ */
+router.post('/organizer/record-general-attendance', async (req, res) => {
+  const { studentId } = req.body || {};
+  if (!studentId) {
+    return res.status(400).json({ message: 'studentId is required.' });
+  }
+  try {
+    const activeEvent = await db.getActiveEvent();
+    if (!activeEvent) {
+      return res.status(404).json({ success: false, message: 'No active event found.' });
+    }
+
+    // Check if student exists
+    const student = await db.getStudentDetailsById(studentId);
+    if (!student) {
+        return res.status(404).json({ success: false, message: 'Student with this ID not found.' });
+    }
+
+    const success = await db.recordTemporaryAttendance(studentId, activeEvent.id);
+    if (success) {
+      res.status(200).json({ success: true, message: `General attendance recorded for ${student.full_name}.` });
+    } else {
+      res.status(409).json({ success: false, message: `Attendance for ${student.full_name} has already been recorded.` });
+    }
+  } catch (error) {
+    console.error('General attendance error:', error);
+    res.status(500).json({ message: 'Server error recording attendance.' });
+  }
+});
+
+
+/**
+ * @route   GET /organizer/general-random-winners
+ * @desc    (Temporary) Selects up to 5 random winners from the general attendance list.
+ * @access  Protected (Organizer or Admin)
+ */
+router.get('/organizer/general-random-winners', async (req, res) => {
+    try {
+        const attendees = await db.getTemporaryAttendeesForActiveEvent();
+
+        if (!attendees || attendees.length === 0) {
+            return res.status(404).json({ message: 'No one has been marked in general attendance yet.' });
+        }
+
+        for (let i = attendees.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [attendees[i], attendees[j]] = [attendees[j], attendees[i]];
+        }
+
+        const winners = attendees.slice(0, 5);
+        res.json({ winners });
+
+    } catch (error) {
+        console.error('Error selecting general random winners:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 module.exports = router;

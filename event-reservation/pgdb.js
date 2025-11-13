@@ -7,7 +7,7 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: { rejectUnauthorized: false } 
+    ssl: { rejectUnauthorized: false }
 });
 
 /**
@@ -18,7 +18,7 @@ const initDB = async () => {
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS students (
-                id SERIAL PRIMARY KEY, 
+                id SERIAL PRIMARY KEY,
                 telegram_id BIGINT UNIQUE NOT NULL,
                 username TEXT,
                 full_name TEXT NOT NULL,
@@ -36,7 +36,7 @@ const initDB = async () => {
                 password_hash TEXT NOT NULL
             );
         `);
-        
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS organizers (
                 id SERIAL PRIMARY KEY,
@@ -56,7 +56,7 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS reservations (
                 id SERIAL PRIMARY KEY,
@@ -66,6 +66,17 @@ const initDB = async () => {
                 feedback TEXT,
                 attended BOOLEAN DEFAULT FALSE,
                 attended_at TIMESTAMP,
+                UNIQUE (student_id, event_id)
+            );
+        `);
+
+        // NEW: Table for temporary, general attendance
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS temporary_attendance (
+                id SERIAL PRIMARY KEY,
+                student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+                event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+                attended_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE (student_id, event_id)
             );
         `);
@@ -92,8 +103,8 @@ const saveUser = async (userData) => {
     const query = `
         INSERT INTO students (telegram_id, username, full_name, phone_number, year_of_study, department)
         VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (telegram_id) 
-        DO UPDATE SET 
+        ON CONFLICT (telegram_id)
+        DO UPDATE SET
             full_name = EXCLUDED.full_name,
             phone_number = EXCLUDED.phone_number,
             year_of_study = EXCLUDED.year_of_study,
@@ -229,7 +240,7 @@ const getAttendeesByEventId = async (eventId) => {
 
 const countActiveEventReservations = async () => {
     const res = await pool.query(`
-        SELECT COUNT(*) FROM reservations 
+        SELECT COUNT(*) FROM reservations
         WHERE event_id = (SELECT id FROM events WHERE is_active = TRUE LIMIT 1)
     `);
     return parseInt(res.rows[0].count);
@@ -240,12 +251,44 @@ const getActiveEventAttendees = async () => {
         SELECT s.full_name, s.year_of_study
         FROM reservations r
         JOIN students s ON r.student_id = s.id
-        WHERE r.event_id = (SELECT id FROM events WHERE is_active = TRUE LIMIT 1) 
+        WHERE r.event_id = (SELECT id FROM events WHERE is_active = TRUE LIMIT 1)
           AND r.attended = TRUE;
     `;
     const res = await pool.query(query);
     return res.rows;
 };
+
+
+// --- NEW TEMPORARY ATTENDANCE FUNCTIONS ---
+
+/**
+ * Records attendance for any student in the temporary_attendance table.
+ */
+const recordTemporaryAttendance = async (studentId, eventId) => {
+    const res = await pool.query(
+        `INSERT INTO temporary_attendance (student_id, event_id)
+         VALUES ($1, $2)
+         ON CONFLICT (student_id, event_id) DO NOTHING
+         RETURNING id`,
+        [studentId, eventId]
+    );
+    return res.rowCount > 0; // Returns true if a new row was inserted, false if it already existed
+};
+
+/**
+ * Gets all attendees for the active event from the temporary_attendance table.
+ */
+const getTemporaryAttendeesForActiveEvent = async () => {
+    const query = `
+        SELECT s.full_name, s.year_of_study
+        FROM temporary_attendance ta
+        JOIN students s ON ta.student_id = s.id
+        WHERE ta.event_id = (SELECT id FROM events WHERE is_active = TRUE LIMIT 1);
+    `;
+    const res = await pool.query(query);
+    return res.rows;
+};
+
 
 // --- TELEGRAM-SPECIFIC FUNCTIONS ---
 
@@ -259,7 +302,7 @@ const getAllStudentTelegramIds = async () => {
     }
 };
 
-module.exports = { 
+module.exports = {
     initDB,
     saveUser,
     findStudentByTelegramId,
@@ -278,5 +321,8 @@ module.exports = {
     getAttendeesByEventId,
     countActiveEventReservations,
     getAllStudentTelegramIds,
-    getActiveEventAttendees
+    getActiveEventAttendees,
+    // NEW EXPORTS
+    recordTemporaryAttendance,
+    getTemporaryAttendeesForActiveEvent
 };
