@@ -1,8 +1,9 @@
 ﻿require('dotenv').config();
 const express = require('express');
+const cors = require('cors');          // 🔹 NEW: import cors
 const bot = require('./bot');
 const db = require('./pgdb');
-const apiRoutes = require('./api'); // Import the routes defined in api.js
+const apiRoutes = require('./api');    // Import the routes defined in api.js
 
 // Initialize the Express application
 const app = express();
@@ -10,13 +11,22 @@ const port = process.env.API_PORT || 3000;
 
 // --- API Server Setup ---
 
+// 🔹 Enable CORS for all origins (OK for dev; you can restrict later)
+app.use(cors({
+  origin: '*',                         // allow any origin (including origin null)
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Optional: explicitly handle preflight for all routes
+app.options('*', cors());
+
 // 1. Add middleware to parse incoming JSON requests from the admin panel
 app.use(express.json());
 
 // 2. Mount the API routes. This tells Express to use the routes from api.js
-//    for any incoming requests (e.g., /admin/login).
+//    for any incoming requests (e.g., /login).
 app.use('/', apiRoutes);
-
 
 // --- Main Application Startup Logic ---
 
