@@ -18,7 +18,7 @@
       background: white;
       padding: 20px 24px;
       border-radius: 8px;
-      max-width: 400px;
+      max-width: 450px;
       width: 100%;
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
@@ -65,6 +65,19 @@
     }
     .success { color: #0b7d2b; }
     .error { color: #c0392b; }
+    .link-btn {
+      margin-top: 10px;
+      background: #28a745;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      padding: 10px;
+      border-radius: 4px;
+      color: #fff;
+      font-weight: bold;
+      width: 100%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -97,13 +110,16 @@
         <button type="submit" id="attendance-btn">Record Attendance</button>
       </form>
       <div id="attendance-message" class="message"></div>
+
+      <!-- Link to spin game page -->
+      <a href="spin.html" class="link-btn">Go to Spin Winners Page</a>
     </div>
   </div>
 
   <script>
-    // 🔧 CONFIGURE YOUR API HERE
-    const BASE_URL = "https://act-dev.onrender.com"; // <-- change this
-    const LOGIN_ENDPOINT = "/login"; // e.g. "/auth/login" if that's your route
+    // API CONFIG
+    const BASE_URL = "https://act-dev.onrender.com";
+    const LOGIN_ENDPOINT = "/organizer/login";
     const ATTENDANCE_ENDPOINT = "/organizer/record-general-attendance";
 
     let accessToken = null;
@@ -118,7 +134,7 @@
     const attendanceMessage = document.getElementById("attendance-message");
     const attendanceBtn = document.getElementById("attendance-btn");
 
-    // Handle login
+    // LOGIN: send ONLY body { username, password }, NO Authorization header
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       loginMessage.textContent = "";
@@ -140,12 +156,11 @@
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          loginMessage.textContent = data.message || "Login failed.";
+          loginMessage.textContent = data.message || `Login failed (status ${response.status}).`;
           loginMessage.classList.add("error");
           return;
         }
 
-        // Expecting { "accessToken": "..." }
         if (!data.accessToken) {
           loginMessage.textContent = "Login response does not contain accessToken.";
           loginMessage.classList.add("error");
@@ -153,11 +168,13 @@
         }
 
         accessToken = data.accessToken;
+        // Save token for other pages (spin.html)
+        localStorage.setItem("accessToken", accessToken);
 
         loginMessage.textContent = "Login successful!";
         loginMessage.classList.add("success");
 
-        // Show attendance section instead of redirecting to another page
+        // Show attendance section
         loginSection.classList.add("hidden");
         attendanceSection.classList.remove("hidden");
 
@@ -170,12 +187,20 @@
       }
     });
 
-    // Handle attendance recording
+    // ATTENDANCE: send Bearer token in header + { studentId } in body
     attendanceForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       attendanceMessage.textContent = "";
       attendanceMessage.className = "message";
       attendanceBtn.disabled = true;
+
+      if (!accessToken) {
+        // Try to restore from localStorage if page was refreshed
+        const stored = localStorage.getItem("accessToken");
+        if (stored) {
+          accessToken = stored;
+        }
+      }
 
       if (!accessToken) {
         attendanceMessage.textContent = "No auth token found. Please login again.";
@@ -199,7 +224,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken // token from login
+            "Authorization": "Bearer " + accessToken
           },
           body: JSON.stringify({ studentId })
         });
@@ -207,13 +232,12 @@
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          attendanceMessage.textContent = data.message || "Failed to record attendance.";
+          attendanceMessage.textContent =
+            data.message || `Failed to record attendance (status ${response.status}).`;
           attendanceMessage.classList.add("error");
           return;
         }
 
-        // Success case – API example:
-        // { success: true, message: `General attendance recorded for ${student.full_name}.` }
         attendanceMessage.textContent = data.message || "Attendance recorded successfully.";
         attendanceMessage.classList.add("success");
         attendanceForm.reset();

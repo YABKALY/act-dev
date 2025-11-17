@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spin & Pick Winners</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --secondary-color: #6c757d;
+      --success-color: #0b7d2b;
+      --error-color: #c0392b;
+      --warning-color: #ffc107;
+      --light-color: #f8f9fa;
+      --dark-color: #343a40;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: var(--dark-color);
+      font-weight: 700;
+      font-size: 28px;
+      position: relative;
+    }
+    
+    h2:after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 4px;
+      background: var(--primary-color);
+      margin: 8px auto 0;
+      border-radius: 2px;
+    }
+    
+    p {
+      font-size: 15px;
+      color: var(--secondary-color);
+      margin-top: 0;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    
+    button {
+      padding: 14px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--primary-color);
+      color: white;
+      width: 100%;
+      max-width: 280px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+    }
+    
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .message {
+      margin-top: 16px;
+      font-size: 15px;
+      white-space: pre-line;
+      font-weight: 500;
+    }
+    
+    .success { color: var(--success-color); }
+    .error { color: var(--error-color); }
+    .warning { color: var(--warning-color); }
+
+    /* Wheel container */
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px auto 30px;
+    }
+    
+    /* Wheel */
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(
+        #007bff 0deg 72deg,
+        #6f42c1 72deg 144deg,
+        #e83e8c 144deg 216deg,
+        #fd7e14 216deg 288deg,
+        #20c997 288deg 360deg
+      );
+      position: relative;
+      transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
+      box-shadow: 0 0 0 10px white, 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .wheel.spinning {
+      animation: spin 0.5s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .wheel:before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: white;
+      border-radius: 50%;
+      z-index: 2;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    
+    /* Wheel pointer */
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 40px;
+      background: var(--error-color);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      z-index: 3;
+    }
+    
+    /* Countdown display */
+    .countdown {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin: 20px 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    .countdown.show {
+      display: block;
+      animation: pulse 1s infinite alternate;
+    }
+    
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    
+    /* Winners list */
+    #winners-list {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 20px;
+      text-align: center;
+      font-size: 16px;
+      display: none;
+    }
+    
+    #winners-list.show {
+      display: block;
+      animation: fadeIn 0.8s ease;
+    }
+    
+    #winners-list li {
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: var(--light-color);
+      border-radius: 8px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transform: translateY(20px);
+      opacity: 0;
+      animation: slideIn 0.5s forwards;
+    }
+    
+    #winners-list li:nth-child(1) { animation-delay: 0.1s; }
+    #winners-list li:nth-child(2) { animation-delay: 0.2s; }
+    #winners-list li:nth-child(3) { animation-delay: 0.3s; }
+    #winners-list li:nth-child(4) { animation-delay: 0.4s; }
+    #winners-list li:nth-child(5) { animation-delay: 0.5s; }
+    
+    @keyframes slideIn {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Confetti effect */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--primary-color);
+      top: 0;
+      opacity: 0;
+    }
+    
+    .confetti:nth-child(1) {
+      left: 7%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 182ms;
+      animation-duration: 1116ms;
+    }
+    
+    .confetti:nth-child(2) {
+      left: 14%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 161ms;
+      animation-duration: 1076ms;
+    }
+    
+    .confetti:nth-child(3) {
+      left: 21%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 481ms;
+      animation-duration: 1103ms;
+    }
+    
+    .confetti:nth-child(4) {
+      left: 28%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 334ms;
+      animation-duration: 708ms;
+    }
+    
+    .confetti:nth-child(5) {
+      left: 35%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 302ms;
+      animation-duration: 789ms;
+    }
+    
+    .confetti:nth-child(6) {
+      left: 42%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 180ms;
+      animation-duration: 875ms;
+    }
+    
+    .confetti:nth-child(7) {
+      left: 49%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 395ms;
+      animation-duration: 1059ms;
+    }
+    
+    .confetti:nth-child(8) {
+      left: 56%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 14ms;
+      animation-duration: 806ms;
+    }
+    
+    .confetti:nth-child(9) {
+      left: 63%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 149ms;
+      animation-duration: 977ms;
+    }
+    
+    .confetti:nth-child(10) {
+      left: 70%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 351ms;
+      animation-duration: 919ms;
+    }
+    
+    .confetti:nth-child(11) {
+      left: 77%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 307ms;
+      animation-duration: 1134ms;
+    }
+    
+    .confetti:nth-child(12) {
+      left: 84%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 464ms;
+      animation-duration: 787ms;
+    }
+    
+    .confetti:nth-child(13) {
+      left: 91%;
+      transform: rotate(0deg);
+      animation: makeItRain 1000ms infinite ease-out;
+      animation-delay: 102ms;
+      animation-duration: 1147ms;
+    }
+    
+    @keyframes makeItRain {
+      from { opacity: 0; }
+      50% { opacity: 1; }
+      to {
+        transform: translateY(350px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    a.back-link {
+      display: inline-block;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    a.back-link:hover {
+      text-decoration: underline;
+      transform: translateX(-2px);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+      
+      .wheel-container {
+        width: 250px;
+        height: 250px;
+      }
+      
+      h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Spin & Pick Winners</h2>
+    <p>
+     ACT DEV community
+    </p>
+
+    <!-- Wheel container -->
+    <div class="wheel-container">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel"></div>
+    </div>
+
+    <!-- Countdown display -->
+    <div class="countdown" id="countdown">5</div>
+
+    <button id="spin-btn">🎰 Spin & Select Winners</button>
+
+    <div id="spin-message" class="message"></div>
+    <ul id="winners-list"></ul>
+
+    <a href="act.html" class="back-link">← Back to login/attendance</a>
+    
+    <!-- Confetti elements -->
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+  </div>
+
+  <script>
+    const BASE_URL = "https://act-dev.onrender.com";
+    const SPIN_ENDPOINT = "/organizer/general-random-winners";
+
+    const spinBtn = document.getElementById("spin-btn");
+    const wheel = document.getElementById("wheel");
+    const countdown = document.getElementById("countdown");
+    const spinMessage = document.getElementById("spin-message");
+    const winnersList = document.getElementById("winners-list");
+
+    function getToken() {
+      return localStorage.getItem("accessToken");
+    }
+
+    spinBtn.addEventListener("click", async () => {
+      spinMessage.textContent = "";
+      spinMessage.className = "message";
+      winnersList.innerHTML = "";
+      winnersList.classList.remove("show");
+      countdown.classList.remove("show");
+
+      const token = getToken();
+      if (!token) {
+        spinMessage.textContent = "No auth token found. Please login first.";
+        spinMessage.classList.add("error");
+        return;
+      }
+
+      spinBtn.disabled = true;
+      wheel.classList.add("spinning"); // start wheel spinning
+
+      // Start countdown from 5 seconds
+      let count = 5;
+      countdown.textContent = count;
+      countdown.classList.add("show");
+      
+      const countdownInterval = setInterval(() => {
+        count--;
+        countdown.textContent = count;
+        
+        if (count <= 0) {
+          clearInterval(countdownInterval);
+          countdown.classList.remove("show");
+          fetchWinners(token);
+        }
+      }, 1000);
+    });
+
+    async function fetchWinners(token) {
+      try {
+        const response = await fetch(BASE_URL + SPIN_ENDPOINT, {
+          method: "GET",
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          wheel.classList.remove("spinning");
+          spinBtn.disabled = false;
+          spinMessage.textContent =
+            data.message || `Failed to get winners (status ${response.status}).`;
+          spinMessage.classList.add("error");
+          return;
+        }
+
+        const winners = data.winners || [];
+        if (!Array.isArray(winners) || winners.length === 0) {
+          wheel.classList.remove("spinning");
+          spinBtn.disabled = false;
+          spinMessage.textContent = "No winners returned.";
+          spinMessage.classList.add("error");
+          return;
+        }
+
+        // Stop wheel spinning with a final rotation
+        wheel.classList.remove("spinning");
+        
+        // Add a final rotation to make it look like it's stopping naturally
+        const currentRotation = getRotationValue(wheel);
+        wheel.style.transform = `rotate(${currentRotation + 1080}deg)`;
+        
+        // Show success message and winners after a brief delay
+        setTimeout(() => {
+          spinMessage.textContent = "🎉 Congratulations to our winners!";
+          spinMessage.classList.add("success");
+          
+          // Show winners with animation
+          winnersList.classList.add("show");
+          
+          winners.forEach((w, index) => {
+            const name =
+              w.full_name ||
+              w.name ||
+              w.username ||
+              w.student_name ||
+              `Student ${w.student_id || w.id || index + 1}`;
+
+            const li = document.createElement("li");
+            li.textContent = `${index + 1}. ${name}`;
+            winnersList.appendChild(li);
+          });
+          
+          spinBtn.disabled = false;
+        }, 1000);
+
+      } catch (err) {
+        console.error(err);
+        wheel.classList.remove("spinning");
+        spinBtn.disabled = false;
+        spinMessage.textContent = "Network error while fetching winners.";
+        spinMessage.classList.add("error");
+      }
+    }
+
+    // Helper function to get current rotation value
+    function getRotationValue(element) {
+      const style = window.getComputedStyle(element);
+      const matrix = style.transform;
+      
+      if (matrix === 'none') return 0;
+      
+      const values = matrix.split('(')[1].split(')')[0].split(',');
+      const a = values[0];
+      const b = values[1];
+      let angle = Math.round(Math.atan2(b, a) * (180/Math.PI));
+      
+      return angle < 0 ? angle + 360 : angle;
+    }
+
+    // Optional: warn immediately if token is missing
+    window.addEventListener("load", () => {
+      const token = getToken();
+      if (!token) {
+        spinMessage.textContent = "No auth token found in this browser. Please login first.";
+        spinMessage.classList.add("error");
+      }
+    });
+  </script>
+</body>
+</html>
